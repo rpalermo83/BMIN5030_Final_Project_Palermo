@@ -38,6 +38,31 @@ Sickbay provides continuous data from bedside monitors and devices in the ICU. T
 
 Describe the data used and general methodological approach used to address the problem described in the @sec-introduction. Subsequently, incorporate full R code necessary to retrieve and clean data, and perform analysis. Be sure to include a description of code so that others (including your future self) can understand what you are doing and why.
 
+```{r}
+library(dplyr)
+library(tidyverse)
+```
+
+```{r}
+##Importing and Cleaning Data
+##import cvs files from database
+digoxin <- read.csv("~/Library/CloudStorage/OneDrive-Personal/Informatics Classes/5030 Data Science/Final Project/Digoxin.csv")
+hlhs_cohort <- read.csv("~/Library/CloudStorage/OneDrive-Personal/Informatics Classes/5030 Data Science/Final Project/HLHS cohort.csv") 
+
+##join demographic and medication DFs
+cohort <- inner_join(digoxin, hlhs_cohort, by = c("MRN", "Patient.Name"))
+cohort
+
+##remove uneccesary columns & duplicates
+colnames(cohort)
+cohort <- cohort |> select(c(MRN, Sex, DOB, Age, Sex, Race, Ethnicity, Deceased, Total...Caths, Total...CT.Surgeries, Generic.Med.Name, Medication.Order, Last.Administration.Date)) |> distinct(MRN, .keep_all = TRUE)
+
+##convert data types, filter to young children
+cohort <- cohort |> mutate(Age = as.numeric(Age), Sex = as.factor(Sex), Race = as.factor(Race), Ethnicity = as.factor(Ethnicity), Deceased = as.factor(Deceased)) |> rename(Total.Caths = Total...Caths, Total.Surgeries = Total...CT.Surgeries) |>  filter(Age <= 5) |> arrange(Age)
+cohort$DOB <- mdy(cohort$DOB)
+cohort
+```
+
 ## Results {#sec-results}
 
 Describe your results and include relevant tables, plots, and code/comments used to obtain them. You may refer to the @sec-methods as needed. End with a brief conclusion of your findings related to the question you set out to address. You can include references if you'd like, but this is not required.
